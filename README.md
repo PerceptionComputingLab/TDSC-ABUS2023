@@ -38,7 +38,7 @@ Winner and invitation speakers: September 18 (11:59PM GMT), 2023
 
 ## Registration
 
-Please refer the grand challenge site [https://tdsc-abus2023.grand-challenge.org/](https://tdsc-abus2023.grand-challenge.org/)
+Please refer to the grand challenge site [https://tdsc-abus2023.grand-challenge.org/](https://tdsc-abus2023.grand-challenge.org/)
 
 ---
 
