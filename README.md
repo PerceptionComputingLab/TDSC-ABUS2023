@@ -23,14 +23,13 @@ Participants are required to **Detect**, **Segment** and **Classify** tumors in 
 ---
 
 ## Schedule 
-
-* Registration: March 28 (11:59PM GMT), 2023
-* Training dataset release: April 6 (11:59PM GMT), 2023
-* Validation dataset release, open validation leaderboard submission: July 15 (11:59PM GMT), 2023
-* Deadline for the validation leaderboard submission: July 20 (11:59PM GMT), 2023
-Opening docker and short paper submission for testing dataset: July 20 (11:59PM GMT), 2023
-* Deadline for docker and short paper submission: July 30 (11:59PM GMT), 2023
-Winner and invitation speakers: September 18 (11:59PM GMT), 2023
+* Registration Opens: March 28, 2023 (11:59 PM GMT)
+* Training Dataset Release: April 6, 2023 (11:59 PM GMT)
+* Validation Dataset Release & Open Validation Leaderboard Submission: July 15, 2023 (11:59 PM GMT)
+* Validation Leaderboard Submission Deadline: August 20, 2023 (11:59 PM GMT)
+* Opening of Docker and Short Paper Submission for Testing Phase: August 20, 2023 (11:59 PM GMT)
+* Docker and Short Paper Submission Deadline: August 30, 2023 (11:59 PM GMT)
+* Winner Announcement & Invitation to Speakers: October 8, 2023 (11:59 PM GMT)
 
 ![timeline](/Images/timeline.png)
 
