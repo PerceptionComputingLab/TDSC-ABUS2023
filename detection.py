@@ -1,4 +1,4 @@
-# --*-- coding:utf-8 -*-
+#This code is based on https://github.com/M3DV/MELA-Challenge
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
