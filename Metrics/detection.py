@@ -1,10 +1,14 @@
-#This code is based on https://github.com/M3DV/MELA-Challenge
+#This code if from https://github.com/M3DV/MELA-Challenge/tree/main/MELA
+# --*-- coding:utf-8 -*-
+import cv2
+import csv
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 
-DEFAULT_KEY_FP = (0.125, 0.25, 0.5, 0.75, 1, 2, 4, 8)
+DEFAULT_KEY_FP = (0.125, 0.25, 0.5, 1, 2, 4, 8)
 
 
 def iou_3d(bbox1, bbox2):
@@ -189,8 +193,8 @@ def _froc_single_thresh(df_list, num_gts, p_thresh, iou_thresh):
 
     Returns
     -------
-    precision : float
-        precision for this threshold.
+    fp : float
+        False positives per scan for this threshold.
     recall : float
         Recall rate for this threshold.
     """
@@ -210,32 +214,75 @@ def _froc_single_thresh(df_list, num_gts, p_thresh, iou_thresh):
                     for df in df_pos_pred])
 
     fp = (total_fp + EPS) / (len(df_list) + EPS)  # average fp in every sample
-    precision = (total_tp + EPS) / (total_tp + total_fp + EPS) 
     recall = (total_tp + EPS) / (total_gt + EPS)
 
-    return precision, recall
+    return fp, recall
 
-def compute_average_precision(recall, precision):
+
+def _interpolate_recall_at_fp(fp_recall, key_fp):
     """
-    Calculate mAP.
+    Calculate recall at key_fp using interpolation.
 
     Parameters
-    recall: List of recall
-    precision: list of precision
+    ----------
+    fp_recall : pandas.DataFrame
+        DataFrame of FP and recall.
+    key_fp : float
+        Key FP threshold at which the recall will be calculated.
 
     Returns
     -------
-    ap: Average precision
+    recall_at_fp : float
+        Recall at key_fp.
     """
-    recall = np.concatenate(([0], recall, [1]))
-    precision = np.concatenate(([0], precision, [0]))
-    for i in range(len(precision) - 2, -1, -1):
-        precision[i] =max(precision[i], precision[i+1])
-    indices = np.where(recall[1:] != recall[:-1])[0] + 1
-    ap = np.sum((recall[indices] - recall[indices-1]) * precision[indices])
-    return ap
+    # get fp/recall interpolation points
+    fp_recall_less_fp = fp_recall.loc[fp_recall.fp <= key_fp]
+    fp_recall_more_fp = fp_recall.loc[fp_recall.fp >= key_fp]
 
-def froc(df_list, num_gts, iou_thresh=0.75):
+    # if key_fp < min_fp, recall = 0
+    if len(fp_recall_less_fp) == 0:
+        return 0
+
+    # if key_fp > max_fp, recall = max_recall
+    if len(fp_recall_more_fp) == 0:
+        return fp_recall.recall.max()
+
+    fp_0 = fp_recall_less_fp["fp"].values[-1]
+    fp_1 = fp_recall_more_fp["fp"].values[0]
+    recall_0 = fp_recall_less_fp["recall"].values[-1]
+    recall_1 = fp_recall_more_fp["recall"].values[0]
+    recall_at_fp = recall_0 + (recall_1 - recall_0) \
+                   * ((key_fp - fp_0) / (fp_1 - fp_0 + 1e-8))
+
+    return recall_at_fp
+
+
+def _get_key_recall(fp, recall, key_fp_list):
+    """
+    Calculate recall at a series of FP threshold.
+
+    Parameters
+    ----------
+    fp : list of float
+        List of FP at different probability thresholds.
+    recall : list of float
+        List of recall at different probability thresholds.
+    key_fp_list : list of float
+        List of key FP values.
+
+    Returns
+    -------
+    key_recall : list of float
+        List of key recall at each key FP.
+    """
+    fp_recall = pd.DataFrame({"fp": fp, "recall": recall}).sort_values("fp")
+    key_recall = [_interpolate_recall_at_fp(fp_recall, key_fp)
+                  for key_fp in key_fp_list]
+
+    return key_recall
+
+
+def froc(df_list, num_gts, iou_thresh=0.3, key_fp=DEFAULT_KEY_FP):
     """
     Calculate the FROC curve.
 
@@ -246,20 +293,50 @@ def froc(df_list, num_gts, iou_thresh=0.75):
         List of number of GT in each volume.
     iou_thresh : float
         The IoU threshold of predictions being considered as "hit".
-
+    key_fp : tuple of float
+        The key false positive per scan used in evaluating the sensitivity
+        of the model.
 
     Returns
     -------
-    precision_recall : List of recall and precision
+    fp : list of float
+        List of false positives per scan at different probability thresholds.
+    recall : list of float
+        List of recall at different probability thresholds.
+    key_recall : list of float
+        List of key recall corresponding to key FPs.
+    avg_recall : float
+        Average recall at key FPs. This is the evaluation metric we use
+        in the detection track.
     """
-    precision_recall = [_froc_single_thresh(df_list, num_gts, p_thresh, iou_thresh)
+    fp_recall = [_froc_single_thresh(df_list, num_gts, p_thresh, iou_thresh)
                  for p_thresh in np.arange(0, 1, 0.005)]  
+    fp = [x[0] for x in fp_recall]
+    recall = [x[1] for x in fp_recall]
+    key_recall = _get_key_recall(fp, recall, key_fp)
+    avg_recall = np.mean(key_recall)
 
-    return precision_recall
+    return fp, recall, key_recall, avg_recall
 
 
+def plot_froc(fp, recall):
+    """
+    Plot the FROC curve.
 
-def score(gt_csv_path, pred_csv_path):
+    Parameters
+    ----------
+    fp : list of float
+        List of false positive per scans at different confidence thresholds.
+    recall : list of float
+        List of recall at different confidence thresholds.
+    """
+    _, ax = plt.subplots()
+    ax.plot(fp, recall)
+    ax.set_title("FROC")
+    plt.savefig("froc.jpg")
+
+
+def evaluate(gt_csv_path, pred_csv_path):
     """
     Evaluate predictions against the ground-truth.
 
@@ -272,7 +349,8 @@ def score(gt_csv_path, pred_csv_path):
 
     Returns
     -------
-    map : Mean average precision.
+    eval_results : dict
+        Dictionary containing detection results.
     """
     # GT and prediction information
     gt_info = pd.read_csv(gt_csv_path)
@@ -310,15 +388,52 @@ def score(gt_csv_path, pred_csv_path):
     num_gts = [x[1] for x in eval_results]
 
     # calculate the detection FROC
-    precision_recall = np.array(froc(det_results, num_gts))
-    map = compute_average_precision(precision_recall[:,0],precision_recall[:,1])
-    # print("precision\n",precision_recall[:,0])
-    # print("recal\n",precision_recall[:,1])
-    # print(map)
+    fp, recall, key_recall, avg_recall = froc(det_results, num_gts)
 
-    return map
+    eval_results = {
+        "detection": {
+            "fp": fp,
+            "recall": recall,
+            "key_recall": key_recall,
+            "average_recall": avg_recall,
+            "max_recall": max(recall),
+            "average_fp_at_max_recall": max(fp),
+        }
+    }
+
+    return eval_results
+
 
 if __name__ == "__main__":
-    eval_results = evaluate_map("gt_path", "pred_path")
+    import argparse
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--gt_dir", required=True)
+    parser.add_argument("--pred_dir", required=True)
+    parser.add_argument("--clf", default="True")
+    args = parser.parse_args()
+    eval_results = evaluate(args.gt_dir, args.pred_dir)
 
+    # detection metrics
+    print("\nDetection metrics")
+    print("=" * 64)
+    print("Recall at key FP")
+    froc_recall = pd.DataFrame(np.array(eval_results["detection"]["key_recall"]) \
+                               .reshape(1, -1), index=["Recall"],
+                               columns=[f"FP={str(x)}" for x in DEFAULT_KEY_FP])
+    print(froc_recall)
+    print("Average recall: {:.4f}".format(
+        eval_results["detection"]["average_recall"]))
+    print("Maximum recall: {:.4f}".format(
+        eval_results["detection"]["max_recall"]
+    ))
+    print("Average FP per scan at maximum recall: {:.4f}".format(
+        eval_results["detection"]["average_fp_at_max_recall"]
+    ))
+
+    # plot/print FROC curve
+    print("FPR, Recall in FROC")
+    for fp, recall in zip(reversed(eval_results["detection"]["fp"]),
+                          reversed(eval_results["detection"]["recall"])):
+        print(f"({fp:.8f}, {recall:.8f})")
+    plot_froc(eval_results["detection"]["fp"], eval_results["detection"]["recall"])
