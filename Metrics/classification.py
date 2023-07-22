@@ -1,4 +1,4 @@
-from sklearn.metrics import precision_score,roc_auc_score
+from sklearn.metrics import accuracy_score,roc_auc_score
 
 import pandas as pd
 
@@ -11,9 +11,9 @@ def score_aggregates(gt_csv_path, pred_csv_path):
     y_true = [label_map[label] for label in gt_info]
     y_pred = [label_map[label] for label in pred_info]
     return {
-        "accuracy": precision_score(y_true,y_pred),
+        "accuracy": accuracy_score(y_true,y_pred),
         "auc": roc_auc_score(y_true,y_pred),
-        "score": (roc_auc_score(y_true,y_pred)+precision_score(y_true,y_pred))/2
+        "score": (roc_auc_score(y_true,y_pred)+accuracy_score(y_true,y_pred))/2
     }
 
 
