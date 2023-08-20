@@ -53,6 +53,4 @@ The top-1 team that win the first place on single task(Segmentation, Classificat
 
 ## Citation
 
-If using our dataset, you must cite the following paper:
-
-[1] Kuanquan Wang, Mingwang Xu, Qiucheng Wang, Wen Cheng, Wei Wang, & Xinjie Liang. (2022). Tumor Detection, Segmentation, and Classification Challenge on Automated 3D Breast Ultrasound. 26th International Conference on Medical Image Computing and Computer Assisted Intervention (MICCAI 2023). [Zenodo](https://doi.org/10.5281/zenodo.6362504)
+Any publication related to this challenge should reference our summary paper, which will be published immediately after the challenge concludes.
