@@ -9,7 +9,7 @@ def score_aggregates(gt_csv_path, pred_csv_path):
     pred_info = pred_info["class"]
     label_map = {'M': 1, 'B': 0}
     y_true = [label_map[label] for label in gt_info]
-    y_pred = [label_map[label] for label in pred_info]
+    y_pred = pred_info
     return {
         "accuracy": accuracy_score(y_true,y_pred),
         "auc": roc_auc_score(y_true,y_pred),
