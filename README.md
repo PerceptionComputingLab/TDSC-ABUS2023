@@ -53,4 +53,5 @@ The top-1 team that win the first place on single task(Segmentation, Classificat
 
 ## Citation
 
-Any publication related to this challenge should reference our summary paper, which will be published immediately after the challenge concludes.
+Any publication related to this challenge should reference our summary paper as provided below.
+[1] Gongning Luo, Mingwang Xu, Hongyu Chen, Xinjie Liang, Xing Tao, Dong Ni, Hyunsu Jeong, Chulhong Kim, Raphael Stock, Michael Baumgartner, Yannick Kirchhoff, Maximilian Rokuss, Klaus Maier-Hein, Zhikai Yang, Tianyu Fan, Nicolas Boutry, Dmitry Tereshchenko, Arthur Moine, Maximilien Charmetant, Jan Sauer, Hao Du, Xiang-Hui Bai, Vipul Pai Raikar, Ricardo Montoya-del-Angel, Robert Marti, Miguel Luna, Dongmin Lee, Abdul Qayyum, Moona Mazher, Qihui Guo, Changyan Wang, Navchetan Awasthi, Qiaochu Zhao, Wei Wang, Kuanquan Wang, Qiucheng Wang, Suyu Dong (2025). Tumor Detection, Segmentation and Classification Challenge on Automated 3D Breast Ultrasound: The TDSC-ABUS Challenge. arXiv:2501.15588. [ArXiv]
